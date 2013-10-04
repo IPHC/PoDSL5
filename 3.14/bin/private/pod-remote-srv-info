@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+#/************************************************************************/
+#/**
+# * @file pod-remote-srv-info
+# * @brief 
+# * @author Anar Manafov A.Manafov@gsi.de
+# *//*
+#
+#        created by:        Anar Manafov
+#                           2011-01-22
+#
+#        Copyright (c) 2011-2012 GSI, Scientific Computing division. All rights reserved.
+#*************************************************************************/
+#
+#=============================================================================
+# ***** USAGE *****
+#=============================================================================
+usage() {
+    cat <<EOF
+A private PoD command line utility, which is used to retrieve a remote PoD server connection information.
+   Copyright (C) 2011-2012 GSI, Scientific Computing division.
+
+Usage: $(basename $0) [OPTION]
+     -l login@host.fqdn 	SSH connection string.
+     -o SSH_Opt			Additinal SSH parameters.
+     -f path			Destination file path.
+     -s file                    Source file path.
+     -d 			Enable debug output.
+     -b				Enable batch mode.
+     -h          		Show summary of options.
+
+Report bugs to http://pod.gsi.de
+EOF
+}
+#=============================================================================
+# ***** OPTARG *****
+#=============================================================================
+FILE_PATH=""
+SSH_CON_STR=""
+SSHOPT=""
+DEBUG=""
+BATCH_MODE=""
+SRV_CFG_FILE=""
+while getopts ":l:o:f:s:dbh" opt; do
+  case $opt in
+  s)
+    SRV_CFG_FILE="$OPTARG"
+    ;;
+  f)
+    FILE_PATH="$OPTARG"
+    ;;
+  l)
+    SSH_CON_STR="$OPTARG"
+    ;;
+  o)
+    SSHOPT="$OPTARG"
+    ;;
+  d)
+    DEBUG="YES"
+    ;;
+  b)
+    BATCH_MODE="YES"
+    ;;
+  h) 
+    usage
+    exit 0
+    ;;
+  \?)
+    echo "Invalid option: -$OPTARG" >&2
+    exit 1
+    ;;
+  esac
+done
+
+if [ -z "$SSH_CON_STR" ]; then
+   usage
+   exit 1
+fi
+#=============================================================================
+# ***** VARS *****
+#=============================================================================
+TIMEOUT=30
+
+if [ -n "$BATCH_MODE" ]; then
+    SSH_CMD="ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=$TIMEOUT -o PasswordAuthentication=no $SSHOPT"
+else
+    SSH_CMD="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$TIMEOUT $SSHOPT"
+fi
+#=============================================================================
+# ***** MAIN *****
+#=============================================================================
+
+if [ -z "$DEBUG" ]; then
+   rsync -aq -e "$SSH_CMD" $SSH_CON_STR:$SRV_CFG_FILE $FILE_PATH &> /dev/null
+else
+   rsync -aq -e "$SSH_CMD" $SSH_CON_STR:$SRV_CFG_FILE $FILE_PATH
+fi
+
+exit 0
+

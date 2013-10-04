@@ -1,0 +1,173 @@
+#!/bin/bash
+
+# sbg wrapper for PoD
+
+if [[ ${NTUPLEANA_PATH} == "" ]]; then
+echo "Please source setup.sh first"
+exit 1
+fi
+
+poddir=${NTUPLEANA_PATH}/../../../PoD
+PODVERSION=$(grep PODVERSION ${poddir}/pod.cfg | sed 's%PODVERSION=%%g')
+SBGVERSION=$(grep SBGVERSION ${poddir}/pod.cfg | sed 's%SBGVERSION=%%g')
+source ${poddir}/${PODVERSION}/PoD_env.sh
+
+fcfg="$HOME/.sbgpod"
+
+if [ ! -f ${fcfg} ]; then
+cp ${poddir}/pod.cfg ${fcfg}
+fi
+
+SBGVERSION_CURRENT=$(grep SBGVERSION ${fcfg} | sed 's%SBGVERSION=%%g')
+if [[ $SBGVERSION != $SBGVERSION_CURRENT ]]; then
+cp ${poddir}/pod.cfg ${fcfg}
+fi
+
+SBGROOTVERSION=$(grep SBGROOTVERSION ${fcfg} | sed 's%SBGROOTVERSION=%%g')
+PODVERSION=$(grep PODVERSION ${fcfg} | sed 's%PODVERSION=%%g')
+NCORES=$(grep NCORES ${fcfg} | sed 's%NCORES=%%g')
+SBGCE=$(grep SBGCE ${fcfg} | sed 's%SBGCE=%%g')
+
+usage()
+{
+echo "usage: sbgpod [options]" >&2
+echo "--start  :    start the server"
+echo "--stop   :    stop the server"
+echo "--nc     :    set number of cores [${NCORES}]"
+echo "--root   :    set ROOT version [${SBGROOTVERSION}]"
+echo "--pod    :    set PoD version [${PODVERSION}]"
+echo "--mon    :    print info on nodes status"
+echo "--con    :    print server address"
+echo "--help   :    print this help"
+echo "--ver    :    print tool version"
+exit 1
+}
+
+isint()
+{
+printf "%d" $1 > /dev/null 2>&1
+return $?
+}
+
+ncores()
+{
+if [[ ${1} == "" ]]; then
+echo "Please specify the number of cpu cores"
+exit 1
+fi
+if ! isint ${1}; then
+echo "Only numbers are accepted for this parameter"
+exit 1
+fi
+sed -i "s%NCORES=.*%NCORES=${1}%g" ${fcfg}
+echo "Number of cpu cores is set to ${1}"
+exit 1
+}
+
+root()
+{
+if [[ "${1}" == "" ]]; then
+echo "Please specify the ROOT version"
+exit 1
+elif [ ! -d $ROOTSYS../${1} ]; then
+echo "ROOT version ${1} is not found"
+exit 1
+fi
+sed -i "s%SBGROOTVERSION=.*%SBGROOTVERSION=${1}%g" ${fcfg}
+exit 1
+}
+
+pod()
+{
+if [[ "${1}" == "" ]]; then
+echo "Please specify the PoD version"
+exit 1
+elif [ ! -d ${poddir}/${1} ]; then
+echo "PoD version ${1} is not found"
+exit 1
+fi
+sed -i "s%SBGPODVERSION=.*%SBGPODVERSION=${1}%g" ${fcfg}
+exit 1
+}
+
+con()
+{
+grep "SBGPROOF=" ${fcfg} | sed "s%SBGPROOF=%%g"
+}
+
+ver()
+{
+grep "SBGVERSION=" ${fcfg} | sed "s%SBGVERSION=%%g"
+}
+
+start()
+{
+v=$(pod-server status 2>&1 | grep "PoD server is NOT running")
+if [[ ${v} == "" ]]; then
+echo "Server is already running, please stop it first"
+exit 1
+fi
+
+loc="${poddir}/${PODVERSION}/etc"
+if [ ! -f ${loc}/PoDWorker.sh.in ]; then
+cat ${loc}/PoDWorker.sh.in.default \
+| sed "s%SBGROOTVERSION%${SBGROOTVERSION}%g" > \
+${loc}/PoDWorker.sh.in
+chmod a+x ${loc}/PoDWorker.sh.in
+fi
+
+lstr="PROOF connection string: "
+v=$(pod-server start 2>&1 | grep "${lstr}" | sed "s%${lstr}%%g")
+if [[ $v != "" ]]; then
+echo "Server started, requesting cpu nodes ..."
+sed -i "s%SBGPROOF=.*%SBGPROOF=${v}%g" ${fcfg}
+v=$(pod-submit -r glite -q ${SBGCE} -n ${NCORES} 2>&1 | grep "https://sbgwms1.in2p3.fr:9000")
+sed -i "s%SBGGLITE=.*%SBGGLITE=${v}%g" ${fcfg}
+echo "Done" 
+fi
+}
+
+stop()
+{
+v=$(pod-server status 2>&1 | grep "PoD server is NOT running")
+if [[ ${v} != "" ]]; then
+echo "Server is not running"
+else
+v=$(pod-server stop 2>&1)
+lstr=$(grep "SBGGLITE=" ${fcfg} | sed "s%SBGGLITE=%%g")
+v=$(glite-wms-job-cancel --noint ${lstr} 2>&1)
+echo "Server stopped"
+fi
+}
+
+mon()
+{
+v=$(pod-server status 2>&1 | grep "PoD server is NOT running")
+if [[ ${v} == "" ]]; then
+nj=$(pod-info -n)
+echo "$nj nodes are ready from $NCORES nodes requested"
+else
+echo "Server is not running"
+exit 1
+fi
+}
+
+[ "$#" -lt 1 ] && usage
+
+while [ $# -gt 0 ]
+do
+arg="$1"
+case "$arg" in
+--start) start ;;
+--stop) stop ;;
+--mon) mon ;;
+--con) con ;;
+--root) root $2 ;;
+--pod) pod $2 ;;
+--nc) ncores $2 ;;
+--help) usage ;;
+--ver) ver ;;
+*) usage;; 
+esac
+shift
+done

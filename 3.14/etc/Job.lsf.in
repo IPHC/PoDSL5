@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#/************************************************************************/
+##/**
+## * @file Job.lsf
+## * @brief an LSF job script
+## * @author Anar Manafov A.Manafov@gsi.de
+## *//*
+##
+##        version number:    $LastChangedRevision$
+##        created by:        Anar Manafov
+##                           2008-10-13
+##        last changed by:   $LastChangedBy$ $LastChangedDate$
+##
+##         Copyright (c) 2008-2012 GSI, Scientific Computing division. All rights reserved.
+##*************************************************************************/
+
+##
+## Important: To retrieve log file a shared file system must be available on WNs.
+##
+######################################################
+# The following variables are expected to set:
+# $POD_WRK_SCRIPT
+# $POD_UI_LOCATION
+# $POD_UI_LOG_LOCATION
+WRK_SCRIPT=$(basename "$POD_WRK_SCRIPT")
+###############################################################
+#
+#    Function: Untar payload content
+#
+###############################################################
+payload_uuencode=1
+payload_binary=0
+function untar_payload()
+{
+	match=$(grep --text --line-number '^PAYLOAD:$' $0 | cut -d ':' -f 1)
+	payload_start=$((match + 1))
+	if [[ $payload_binary -ne 0 ]]; then
+		tail -n +$payload_start $0 | tar -xzvf -
+	fi
+	if [[ $payload_uuencode -ne 0 ]]; then
+		tail -n +$payload_start $0 | uudecode | tar -xzvf -
+	fi
+}
+###############################################################
+#
+#    Function: Transfer files from WN to UI.                  
+#
+###############################################################
+stageout()
+{
+   user_defaults="$WRK_DIR/pod-user-defaults"
+   pod_cfg=$WRK_DIR/PoD.cfg
+   #
+   ## logs
+   #
+   eval LOG_DIR=$($user_defaults -c $pod_cfg --key server.logfile_dir)/$LSB_JOBID
+   mkdir -p $LOG_DIR
+
+   upload_job_log=$($user_defaults -c $pod_cfg --key lsf_plugin.upload_job_log)
+
+   echo "PoD UI Log dir: $LOG_DIR"
+   echo "PoD upload jobs log: $upload_job_log"
+
+   if [ "$upload_job_log" = "1" ]; then
+      cp $WRK_DIR/proof_log.tgz $LOG_DIR/proof_log_$LSB_JOBINDEX.tgz
+      cp $WRK_DIR/xpd.log $LOG_DIR/xpd_$LSB_JOBINDEX.log
+      cp $WRK_DIR/pod-agent.client.log $LOG_DIR/pod-agent.client_$LSB_JOBINDEX.log 
+   fi
+}
+
+echo "Starting PoD worker on the host: $HOSTNAME"
+###############################################################
+#
+# create a working folder
+#
+###############################################################
+WRK_DIR=$(mktemp -d /tmp/PoD_XXXXXXXXXX)
+if [ -z $WRK_DIR ]; then
+   echo "Error: Can't create a working directory."
+   exit 1
+fi
+echo "working directory: " $WRK_DIR
+cd $WRK_DIR || exit 1
+# global variables
+# we need to define lib path to ensure that we use proper libraries
+export PATH=$WRK_DIR:$PATH 
+export LD_LIBRARY_PATH=$WRK_DIR:$LD_LIBRARY_PATH
+################################################################
+#
+# Untar payload
+#
+###############################################################
+untar_payload
+################################################################
+#
+# POD WORKER
+#
+###############################################################
+$WRK_DIR/$WRK_SCRIPT
+###############################################################
+#
+# get all logs
+#
+###############################################################
+stageout
+###############################################################
+#
+# remove working folder
+#
+###############################################################
+if [[ -d $WRK_DIR ]]; then
+   rm -rf $WRK_DIR
+fi
+
+exit 0
+

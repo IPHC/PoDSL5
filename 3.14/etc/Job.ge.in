@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+#/************************************************************************/
+##/**
+## * @file Job.oge
+## * @brief a OGE/SGE job script
+## * @author Anar Manafov A.Manafov@gsi.de
+## *//*
+##
+##        version number:    $LastChangedRevision$
+##        created by:        Anar Manafov
+##                           2010-10-03
+##        last changed by:   $LastChangedBy$ $LastChangedDate$
+##
+##         Copyright (c) 2010-2012 GSI, Scientific Computing division. All rights reserved.
+##*************************************************************************/
+
+##
+## Important: To retrieve log file a shared file system must be available on WNs.
+##
+
+######################################################
+# The following variables are expected to set:
+# $POD_WRK_SCRIPT
+# $POD_UI_LOCATION
+# $POD_UI_LOG_LOCATION
+WRK_SCRIPT=$(basename "$POD_WRK_SCRIPT")
+UI_LOG_DIR=$POD_UI_LOG_LOCATION/$JOB_ID
+###############################################################
+#
+#    Function: Untar payload content
+#
+###############################################################
+payload_uuencode=1
+payload_binary=0
+function untar_payload()
+{
+	match=$(grep --text --line-number '^PAYLOAD:$' $0 | cut -d ':' -f 1)
+	payload_start=$((match + 1))
+	if [[ $payload_binary -ne 0 ]]; then
+		tail -n +$payload_start $0 | tar -xzvf -
+	fi
+	if [[ $payload_uuencode -ne 0 ]]; then
+		tail -n +$payload_start $0 | uudecode | tar -xzvf -
+	fi
+}
+###############################################################
+#
+#    Function: Transfer files from WN to UI.                  
+#
+###############################################################
+stageout()
+{
+   eval upload_job_log=$($WRK_DIR/pod-user-defaults -c $WRK_DIR/PoD.cfg --key ge_plugin.upload_job_log)
+
+   if [ "$upload_job_log" = "1" ]; then
+      echo "Staging the log files out..."
+      echo "log dir: "$UI_LOG_DIR
+
+      cp $WRK_DIR/proof_log.tgz $UI_LOG_DIR/proof_log.$SGE_TASK_ID.tgz
+      cp $WRK_DIR/xpd.log $UI_LOG_DIR/xpd.$SGE_TASK_ID.log
+      cp $WRK_DIR/pod-agent.client.log $UI_LOG_DIR/pod-agent.client.$SGE_TASK_ID.log 
+   fi
+}
+
+echo "Starting PoD worker on the host: $HOSTNAME"
+###############################################################
+#
+# create a working folder
+#
+###############################################################
+WRK_DIR=$(mktemp -d /tmp/PoD_XXXXXXXXXX)
+if [ -z $WRK_DIR ]; then
+   echo "Error: Can't create a working directory."
+   exit 1
+fi
+echo "working directory: " $WRK_DIR
+cd $WRK_DIR || exit 1
+# global variables
+# we need to define lib path to ensure that we use proper libraries
+export PATH=$WRK_DIR:$PATH 
+export LD_LIBRARY_PATH=$WRK_DIR:$LD_LIBRARY_PATH
+################################################################
+#
+# Untar payload
+#
+###############################################################
+untar_payload
+################################################################
+#
+# POD WORKER
+#
+###############################################################
+$WRK_DIR/$WRK_SCRIPT
+###############################################################
+#
+# get all logs
+#
+###############################################################
+stageout
+###############################################################
+#
+# remove working folder
+#
+###############################################################
+if [[ -d $WRK_DIR ]]; then
+   rm -rf $WRK_DIR
+fi
+
+exit 0
+

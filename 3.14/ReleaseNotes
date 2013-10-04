@@ -1,0 +1,380 @@
+# Release Notes for PoD (PROOF on Demand)
+
+## 3.14 (2013-09-20)
+pod: Implemented a PanDa plug-in for PoD. 
+pod: Implemented a SLURM plug-in for PoD.
+pod: !!!Experimental feature!!! Use identity file in ssh tunnels to connect back from WN behind FireWalls.
+pod-user-defaults: updated user defaults configuration file - v0.9.
+pod-user-defaults: learned a "pbs_plugin.options_file" option.
+pod-user-defaults: learned a "slurm_plugin.upload_job_log" option.
+pod-user-defaults: learned a "server.gen_temp_ssh_keys" option.  
+
+## 3.12 (2012-10-04)
+pod: User's Manual has been updated.
+pod: *** Worker packages are now added as a payload to the worker script. ***
+pod: PoD installations are relocatable now. The POD_LOCATION variable is set automatically according to the location of PoD_env.sh. 
+pod: Added a support for BOOST 1.50 and Boost.Filesystem version3.
+pod-ssh: fixed: re-pack worker package only when submitting.
+pod-user-defaults: updated user defaults configuration file - v0.8.
+pod-user-defaults: learned a "server.sandbox_dir" setting, which can be used to specify a shared location for jobs scripts which can be accessed by RMS WNs.
+
+## v3.10 (2012-02-28) 
+pod: fixed: PoD WNs can now properly detect and react when xproofd is going down or has crashed on WNs.
+pod: fixed: PoD WN could hang forever if failed to start xproofd.
+pod: GUI support is discontinued. (Bug 25)
+pod: Implemented new gLite plug-in (Bug 26).
+pod: User's Manual has been updated.
+pod: Remove tmp directories on server and WNs when cleaning. (Bug 22)
+pod: if xproofd on WNs goes down or is crashed, we will try to restart all processes of PoD WNs 3 times. (Bug 23)
+pod: The agent restart counter is reset after a 10 min. work without interruptions.
+pod-ssh: learned a "--for-worker" option to perform an action on given worker nodes. (Bug 17)
+pod-ssh: The following options were dropped: "--submit", "--status", "--clean", and "--fast-clean".
+pod-ssh: For user's convenience it's possible now to use commands without the "--" sign, e.g.: "pod-ssh submit" or "pod-ssh clean".
+pod-remote: fixed: The command could forget to use an ssh open domain.
+pod-info: fixed: A wrong PROOF connection string is shown when pod-remote is used to setup a server.
+
+## v3.8 (2011-11-15)
+pod: WN pre-compiled binaries for MacOSX are now build as universal in order to support all x86 machines and
+     older MacOSX versions (the minimum supported MacOSX is 10.5).
+pod: fixed: pod-ssh and pod-remote sometimes at start up erroneously complain about missing configuration files.
+pod: User's Manual has been updated.
+pod-info: fixed: Sometimes pod-info with "-n" or "-l" options hangs in the read method of the protocol class.
+pbs-plugin: fixed: Some versions of OpenPBS require an explicit specification of the log file name, when an array job submission is used.
+pbs-plugin: fixed: Site admins can forget to properly configure host keys, we therefor don't use StrictHostKeyChecking
+                   when a shared home file system is not available.
+pod-ssh: Users can now define an environment script for WNs in pod-ssh config files. It's so called an inline environment script.
+pod-ssh: Usage of "user_worker_env.sh" in "pod-ssh" is deprecated now. Use inline environment scripts instead.
+pod-ssh: learned a "--fast-clean" option to fast clean of WNs. It just shuts WNs down, but doesn't actually clean work directories.
+pod-ssh: learned a "--threads/-t" option to define a number of threads in the "pod-ssh" thread pool (min is 1, max is (Cores*2). Default: 5).
+pod-ssh: learned a "--exec/-e" option to execute a local shell script on the remote worker nodes.
+pod-ssh: Now "--exec" can be used together with either "--submit" or "--clean" to force execution of a custom script before starting/cleaning PoD WNs.
+pod-ssh: Fixed the "--submit" option. It was wrongly creating the "ssh_worker.log" file in user's home on WNs.
+pod-remote: Fixed the "--stop" option.
+pod-remote: The "--ssh_opt" and "--ssh_open_domain" options have been renamed to "--ssh-opt" and "--ssh-open-domain" accordingly.
+pod-remote: The "--ssh-open-domain" option is fully implemented now.
+pod-remote: learned a "--config/-c" option to specify an options file with the "pod-remote" command line options.
+pod-remote: learned a "--env-local" and a "-env-remote" options.
+pod-remote: The "--env" option has been dropped in favor to "--env-local".
+
+## v3.6 (2011-07-07)
+pod: Implemented a new command - "pod-remote". Using the command users can start/stop/restart remote PoD servers.
+     The command can also be used to execute arbitrary commands on the remote PoD server, such as PoD job submissions.
+     To build "pod-remote" the boost 1.41.0 (or higher) is required.
+     All communications are secured and provided via SSH channels. Additionally PoD automatically creates and maintains
+     SSH tunnels for PROOF connections between a user interface and PROOF muster.
+     There could be problems with PROOF via SSH tunnel, see bug-fix: http://root.cern.ch/viewvc?view=rev&revision=39580 in the Revision 39580.
+pod: Implemented an LoadLeveler (IBM Tivoli Workload Scheduler) plug-in. This plug-in can be only used via PoD CLI.
+     A special thanks to Simon Heisterkamp (Copenhagen, Denmark), who helped in development of the plug-in.
+pod: Reorganize the source project by introducing some shared libs, in order to make the code to be more flexible, reusable
+     and to reduce the size of executables.
+pod: Users now able to add custom settings to xpd configuration file, which is generated by PoD server.
+pod: PoD WN has bin ported to MacOSX (10.6).
+pod: Now each PoD WN starts its own xproofd daemon.
+     In this case we can control and handle each PoD worker individually (this is important for AliEn integration).
+pod: The "$POD_RMS_DEFAULT_QUEUE" environment variable is now can be used to define the default RMS queue.
+     If no "-q" option is provided to "pod-submit", then the value of this variable is used.
+pod-info: The command can be used now to retrieve port numbers of xpd and pod-agent.
+pod-ssh: The command now remembers the "--config" value if once entered. There is no need to write it again if the same when executing pod-ssh next time.
+pod-ssh: The command learned "--logs" option. Download all log files from the worker nodes. Can be used only together with the "clean" option. 
+pod-ssh: The command learned "--debug/-d" option. Verbose mode. Causes pod-ssh to print debugging messages about its progress. 
+pod-ssh: The command has now a cleaner output. Most of the output messages are switched off and can be switched on via the "--debug" option.
+pod: The build of pod-console is disabled by default. At the moment CLI is much more advanced, powerful and recommend to use over GUI.
+     The GUI is being redesigned and work in progress.
+pod: Updated Users's Manual.
+
+## v3.4 (2011-02-23)
+pod: Starting with version 3.4, PoD go its version numbering scheme a bit changed.
+     It reflects the fact that PoD is both a production system and a research project.
+     PoD now uses odd minor version numbers to denote development releases and even minor version numbers to denote stable releases.
+     (see User's Manual for more details, section 3.2 "PoD Version Number Scheme").
+pod: fixed [Bug 3]: pod-agent doesn't stop PoD server on Linux when idle is detected.
+pod: fixed [Bug 4]: In some cases PoD server could forget to shut down xproof processes.
+pod: The "pod-info" command has been rewritten from scratch.
+     Now it works as a client for "pod-agent" and can be used to request information from remote PoD servers. 
+     This is the first step to disentangle PoD UI and PoD Server. See User's manual for more information.
+pod: PoD doesn't generate a helper header anymore, since the "pod-info" command can be used from remote (to PoD server) hosts as well.
+pod: The "pod-server" command calls now the new "pod-info" to find out the status of PoD processes and ports, instead of implementing this in BASH.
+     The "pod-server" is also got significant speed up improvements.
+pod: The "pod-prep-worker" command checks now timestamps and diffs of the components and doesn't repack the package if the package is up-to-date.
+pod: The PoD worker package is updated automatically if any of its component is updated.
+     The package status is now checked automatically before submitting PoD jobs in PoD CLI and PoD SSH.
+     It means, users don't need explicitly call the "pod-prep-worker" command or restart PoD server if configuration has been changed.
+     But a PoD job re-submission is still required.
+pod-agent: The "proofport" option has been removed. Agents are now able to detect xproofd ports automatically.
+pod-agent: The admin. protocol has been upgraded to version 5.
+pod-ssh: If a user doesn't request a specific number of PROOF workers for some of the worker nodes,
+         then "pod-ssh" will setup PROOF workers on that worker node according to a number of CPU cores.
+         That means, that the last parameter in the "pod-ssh" configuration file is not required anymore and can be left empty.
+pod-user-defaults: Added the "server.proof_cfg_entry_pattern" option. This patter can be used to customize entries in proof.cfg.
+
+## v3.1 (2011-01-07)
+pod: Now PoD supports shared installations.
+pod: Implemented a Condor plug-in for PoD. The plug-in supports only PoD CLI, so far. 
+pod: The PoD server starter script is now much safer and smarter.
+     The scrip cleans precisely only own processes, which makes it possible to start several PoD servers under the same user ID
+     (this is important for AliEn integration). The script learned new algorithms, which are used to detect PoD processes and ports.
+     It is also a factor of 3 faster now.
+pod: The PoD worker script cleans now precisely only own processes. It makes it possible to start several different PoD workers under
+     the same user ID (this is important for AliEn integration).
+pod: The "pod-server" command learned "restart" and "getbins" options.
+pod: User's environment script name changed from "user.worker_env.sh" to "user_worker_env.sh".
+pod: The OGE plug-in was renamed to GE (Grid Engine).
+pod: Stop all processes of PoD server, when pod-agent server detects idle timeout. In older versions, only pod-agent was stopped.
+pod: SSH plug-in: Warn users that PoD server is not running, before "submit" is executed.
+pod: SSH plug-in: Better error handling in case of "status" and "clean".
+pod: This release also fixes a number of minor issues.
+pod-user-defaults: updated user defaults configuration file - v0.7.
+pod-user-defaults: renamed the oge_plugin section to ge_plugin.
+pod-user-defaults: added the ge_plugin.options_file option.
+pod-user-defaults: added the condor_plugin.upload_job_log option.
+pod-user-defaults: added the condor_plugin.options_file option.
+pod-user-defaults: "pod-user-defaults" learned the "userenvscript" option.
+                   It shows the path of user's environment script of workers (if present).
+pod-user-defaults: "pod-user-defaults" learned the "verbose,V" option.
+                   This option causes "pod-user-defaults" to be verbose in case of an error. 
+
+## v2.4 (2010-11-14)
+pod: Implemented an Oracle Grid Engine (OGE/SGE) plug-in for PoD. This plug-in can be used via PoD GUI and CLI.
+pod: Fixed a typo/bug, which prevented PoD worker to download pre-compiled binaries of pod-agent for x86 machines.
+pod: Now the PoD pre-compiled worker packages naming is automated and unified.
+pod: Added "pod-check-update" command.
+pod: WNs don't download pre-compiled bins from the PoD central repository anymore. Now only PoD UI downloads them if missing.
+     Users could also provide own binaries, instead of using the PoD central repository. This resolves several security issues and
+     speeds up the start up time of PoD jobs.
+pod: PoD tries to automatically detect whether PoD's server is installed on a shared home file system, which is also
+     mounted on WNs.  
+pod: PoD WNs now tries to use binaries from PoD UI, if a shared home file system is detected.
+     It speeds up the start up time of PoD jobs. If this try fails, then PoD WN will use
+     pre-compiled bins, which come with PoD's worker package.
+pod: PoD UI/Server supports Mac OS X. So far only CLI and only the SSH plug-in are working and have been tested.
+pod: All CLI plug-ins are now in separate files. This makes it much easer to extend PoD with new plug-ins and to support old ones.
+pod: fixed behaviour for PBS and OGE plug-ins: when xxxx.upload_job_log is set to "no", there will be no jobs' output stored, even no stdout/err. 
+pod: User's Manual has been updated.
+pod: This release also has a number of minor fixes.
+pod-user-defaults: updated user defaults configuration file - v0.6.
+pod-user-defaults: removed the pbs_plugin.shared_home option.
+pod-user-defaults: added the oge_plugin.upload_job_log option.
+
+## v2.3 (2010-10-03)
+pod: pod-ssh doesn't use scp anymore, instead rsync is used.
+pod: A number of minor changes.
+pod: MacOSX port. Implemented a custom pkill function, since MacOSX doesn't support pkill command.
+pod-agent: MacOSX port. The agent has been slightly updated in order to support MacOSX.
+pod-agent: Fixed a regression bug, which in some cases prevented Agent Clients to go out of admin-channel.
+           This could blocked the packet-forwarder operations.
+
+## v2.2 (2010-09-17)
+pod: A major highlight of this release is the first implementation of the PoD with SSH plug-in (see User's Manual, Chapter 11. SSH plug-in).
+pod: The project has been restructured. Now most of the submodules have been incorporated directly into PoD's source tree.
+pod: A number of fixes to optimize the build process speed and the size of the source package.
+pod: Added new build targets, api-docs and upload-api-docs. In order to build PoD's private API documentation.
+pod: A new versioning system has been introduced. Now using a git canonical version number as a basis for PoD's version string.
+pod: The User's Manual has been significantly updated and a new chapter - "Quick Start" has been added.
+pod: Using a new bash algorithm, instead of a perl code to find out free tcp ports.
+pod: The pod-user-defaults-lite executable (python implementation) has been removed from the project.
+     The generic pod-user-defaults (C++) is used now on both sides, server and worker.
+pod: PoD doesn't use xrootd anymore. Instead xproofd is used.
+     Starting with ROOT version 5.24/00 an executable named xproofd is also available under  $ROOTSYS/bin.
+     The xproofd executable is built out of the same main program used to build the xrootd executable. However, it loads by default
+     the XrdProofdProtocol instead of the data-serving protocol XrdXrootdProtocol. The purpose of this daemon is to simplify
+     the configuration when data-serving is not needed or it is handled differently.
+pod: Implemented an automatic execution of a custom (user specified) environment script on workers before PoD processes start. (User's Manual, section 5.2.)
+pod-agent: learned "--workers" option. A number of PROOF workers to spawn.
+           Used only by agents in a worker mode and only in the native PROOF connection.
+pod-agent: the internal administration protocol has been upgraded to version 3.
+pod-agent: the "--pidfile/p" option has been removed. User default's "<server/worker>.work_dir" is used instead.
+pod-agent: the internal-administration protocol algorithms has been improved.
+pod-user-defaults: updated user defaults configuration file - v0.5.
+pod-user-defaults: removed xrd port settings, since PoD is using the xproofd executable, instead of the xrootd executable.
+pod-user-defaults: removed the worker.agent_threads setting.
+pod-user-defaults: "pod-user-defaults" learned "--default/-d" option to generate the default PoD configuration file.
+pod-user-defaults: "pod-user-defaults" learned "--force/-f" option, wich can be used with "--default/-d".
+                   If the destination file exists, remove it and create a new file, without prompting for confirmation.
+pod-console (LSF plug-in): Fixed a bug. After a reload the console shows an incorrect number of previously submitted PoD workers.
+
+## v2.1.4 (2010-05-26)
+pod: A new build system and installation procedure have been introduced.
+pod: Added a PBS plug-in, which opens a possibility to submit PoD jobs to PBS resource management system.
+pod: User's manual is updated.
+pod: The source code of sub-modules of PoD is now shipped along with the PoD distribution. 
+utilities: Added "pod-info" command. This is a part of PoD command line interface now. Please see PoD documentation for more details.
+utilities: Added "pod-prep-worker" command. This is a part of PoD command line interface now. Please see PoD documentation for more details. 
+utilities: Added "pod-submit" command. This is a part of PoD command line interface now. Please see PoD documentation for more details.
+pod-agent: updated build system. Now can be build as a part of PoD or independently.
+glite-api-wrapper: ported to gLite UI 3.2
+glite-api-wrapper: use cmake as a build system
+pod-console: updated build system. Now can be build as a part of PoD or independently.
+pod-console: added glite-api-wrapper as a part of gLite plug-in. Using GAW v3.3.0.
+pod-console: added a PBS/torque plug-in.
+pod-user-defaults: updated build system. Now can be build as a part of PoD or independently.
+pod-user-defaults: updated user defaults configuration file - v0.4
+pod-user-defaults: new option <pbs_plugin.shared_home>, default is "no".
+                   The parameter specifies whether a shared home files system is used.
+                   If "no" is set, then PoD will use the scp command to stagin/out needed files.
+pod-user-defaults: new option <pbs_plugin.upload_job_log>, default if "no".
+                   The parameter specifies whether to upload jobs log files from workers
+                   when PoD jobs are completed. Jobs log files include a full log of PROOF,
+                   XROOTD and pod-agent's log files. 
+
+## v2.1.3 (2010-01-18)
+pod-agent: implemented a new internal communication protocol. It's used for Client/Server admin. communications.
+pod-agent: now it is possible to use a direct connection between a PROOF server and PROOF workers.
+           Agent can automatically decided whether to use packet forwarding (for cases when PROOF workers are behind a firewall) or not.
+           It is also a configurable option in the PoD user defaults. To use this feature you need to have ROOT 5.25.04 or higher.
+pod-agent: minimally required version of ROOT is 5.25.04. Otherwise agent will not be able to detect idle when a native PROOF connection is used.
+pod-agent: minimally required version of Boost is 1.33.1 now.
+pod-agent: added unit tests.
+pod-agent: the log file name now is "pod-agent.<instance_name>.log".
+pod-console: lock-on-idle time is 30 minutes now (instead of 15 min.).
+pod-user-defaults: updated user defaults configuration file - v0.3
+pod-user-defaults: new option <server.packet_forwarding>, default is "auto".
+                   if workers are behind a firewall then PoD will use its packet forwarding (PF) algorithms
+                   to maintain the PROOF traffic between server and workers.
+                   By setting this key to "yes" you force PoD to use PF in any case. If "auto" is set then PoD
+                   will decide on the fly whether to use PF for each worker individually based on the possibility
+                   to directly connect to worker.
+
+## v2.1.2 (2009-11-30)
+utilities: The automatic port mapping: increase a retry counts to 10 instead of 3.
+           Sometime xrd could take longer to start which prevents PoD workers to properly detect all ports of it.
+           As the result these workers will shutdown the job at a very early stages of initialization of PoD.
+utilities: use user defaults' work_dir as a working dir value in the PoD server script.
+utilities: Server_PoD.sh has been renamed to pod-server.
+pod-agent: create admin files by the server/worker.work_dir path. For example, AFS doesn't support named pipes,
+           users therefore can install PoD on AFS but specify different work_dir where PoD is able to create pipes and other admin files.
+pod-agent: minor improvements of packet-forwarding algorithms.
+pod-console: switch the whole monitoring and all sensors off if there is no user interaction during the last 15 min (time is hard coded).
+pod-console: GUI modifications. Removed PID dir controls from the server page.
+pod-console: introduced an improved algorithm of updating available PROOF workers (WORKERS page).
+             Is not timer based anymore, but rather watches file modifications system events. Now very efficient and system resource friendly.
+pod-console: fixed a case when after restart the console could forget a number of expected PROOF workers.
+pod-console (LSF plug-in): moved to Qt 4.4.2, because of the bug in Qt 4.2.1 (see. http://lists.trolltech.com/qt-interest/2007-02/thread00018-0.html,
+                           "Resetting a sub-tree of a QAbstractItemModel").
+pod-console (LSF plug-in): *** revised implementation of the LSF plug-in engine. That made the LSF plug-in very much LSF and resource friendly. ***
+pod-console (LSF plug-in): a number of requests to LSF daemon (a very expensive operations) and cases when requests should be send have been reduced by
+                           a huge factor and the algorithm now is much faster and smarter.
+pod-console (LSF plug-in): update status only for unfinished LSF jobs.
+pod-console (LSF plug-in): the serialization file of the LSF plug-in has been renamed to "pod-console_LSF.xml.cfg".
+pod-console (LSF plug-in): improved the update speed of the jobs tree (GUI) if a job was removes from the monitoring or added to it.
+                           Now this part of GUI is more responsive and fast.
+pod-console (LSF plug-in): fixed a SEGFAULT error condition, which could happen when closing pod-console or removing jobs from the monitoring.
+pod-console (LSF plug-in): now users can send a kill signal to a LSF job or to an job in the array, using jobs context menu.
+                           This will kill the job and remove it from the LSF queue.
+pod-console (LSF plug-in): now user can exclude all completed jobs at once from the monitoring, using jobs context menu.
+pod-console (LSF plug-in): new user defaults option <lsf_plugin.email_job_output>.
+                           It specifies whether job's output is sent to the user by mail or should be
+                           written to files. Output files are saved in to PoD's log dir.
+pod-conosle (LSF plug-in): in the jobs tree view (GUI), expand only one parent node at time.
+pod-console (LSF plug-in): don't count completed LSF jobs as expected PROOF worker.
+                           It helps the WORKERS page in GUI to show a number of expected workers properly.
+pod-user-defaults: updated user defaults configuration file - v0.2
+pod-user-defaults: if shared home is used, users can define $ROOTSYS as a ROOT version for workers.
+                   Workers will use that version of ROOT, which is defined on UI machine. (see worker.my_rootsys in PoD.cfg)
+pod-user-defaults: new option <lsf_plugin.email_job_output>, default is "no".
+                   The parameter specifies whether job's output is sent to the user by mail.
+                   If no is set, output will be delivered the log directory in std_[INDEX].err and std_[INDEX].out files
+pod-user-defaults: new option <lsf_plugin.upload_job_log>, default is "no".
+                   The parameter specifies whether to upload jobs log files from workers when PoD jobs are completed.
+                   Jobs log files include a full log of PROOF, XROOTD and pod-agent's log files.
+
+## v2.1.1 (2009-10-24)
+- using a central user-defaults configuration ($POD_LOCATION/etc/PoD.cfg). 
+- a general optimization has been done. A virt. Memory footprint is reduced by a factor of 14 (in case of 80 WNs). A significant increase of the speed.
+- added idle time-out watchers for servers and workers. Shutdown a node (a worker or a server) when idle for a defined amount of time.
+- server's script has been cleaned up and now also relays on PoD's user defaults.
+- jobs' wrapper script has been cleaned up.
+- introduced a new algorithm for automatic port mapping.
+
+Configuration update:
+   - added <worker.set_my_rootsys>. Set to "yes" if you want to use a custom version of the ROOT on workers. PoD set ROOTSYS env.variable to a value defined by <worker.my_rootsys>.
+   - added <worker.my_rootsys>. Set to a path to a custom ROOT version.
+
+Submodules:
+=== GAW v3.2.0
+=== pod-agent v2.1.1 (2009-10-20) with the following changes:
+   - project's has been renamed to pod-agent.
+   - use now PoD's user defaults ($POD_LOCATION/etc/PoD.cfg) for configuration options.
+   - a new proxy machinery based on a thread-pool pattern. This gives PoD a significant speed improvements in cases when PROOF does file validation and merging and when many workers are used.
+   - a number of threads in the pool and a read buffer size can be changed via PoD's user defaults configuration file. 
+   - when in the worker mode, use a server_info.cfg file, where a host name and a port number of the agent server are stored.
+   - added new program options: 
+      - "proofport" - a PROOF (xproof) port. Used only by agents in a worker mode
+      - "serverinfo" - a server info file name. Default is $POD_LOCATION/etc/server_info.cfg
+   - support Mac OS X 10.5 and 10.6.
+   - a log level is now can be defined via PoD's user defaults configuration file.
+   - a log file location is now can be defined via Pod's user defaults configuration file.
+=== pod-console v1.1.1 (2009-10-20) with the following changes:
+   - Renamed to pod-console.
+   - Don't update server or workers page if the page is hidden.
+   - Optimized LSF plug-in status updated.
+   - A factor of 3 optimization of the server status update.
+   - minor bugs fixes.
+=== pod-user-defaults v1.0.1 (2009-10-20)
+
+## v2.0.10 (2009-07-21)
+Using new PROOFAgent.
+   - A patch release.
+     The patch addresses some stability issues and most importantly fixes a hanging-on-merging issue, which was due to a loose of TCP packages.
+     Workers where sending data without checking that server could be temporary unavailable due to a full buffer of the socket.
+
+## v2.0.9 (2009-07-11)
+- A patched version, tuned for ROOT 5.24. Released because PROOF changed the way it handles variables in xrd config. file.
+
+## v2.0.8 (2009-06-16)
+- Switch to $POD_LOCATION instead of $GLITE_PROOF_LOCATION.
+- Using PROOFAgent's new configuration file.
+- A better handling of multiple PoD workers on the same worker node started in the same time.
+- Many minor fixes.
+Submodules:
+=== GAW v3.2.0
+=== PROOFAgent v2.0.0 (2009-06-15) with the following changes:
+   - Dramatically reduced a number of threads, which PA produces (on both server and client sides).
+   - A slight redesign of the packet forwarder. PA now requires a factor of 3 less resources to handle each worker.
+   - Removed the dependency on XERCES-C library.
+   - The configuration file has been redesigned. Now using an INI style.
+   - The build system has been switched from GNU Autotools to cmake.
+   - Due to many bugs in FindBOOST of older versions of cmake we require cmake 2.6.4.
+   - Switched from $GLITE_PROOF_LOCATION to $POD_LOCATION.
+   - New configuration parameter - client.shutdown_if_idle_for_sec. Shut down a worker if its idle time is higher than this value.
+   - Cosmetic changes.
+=== PAConsole v1.0.7 (2009-06-15) with the following changes:
+   - Source code cleaning.
+   - Switched from $GLITE_PROOF_LOCATION to $POD_LOCATION.
+   - Using new PROOFAgent's configuration file.
+   - Fixed a case when several users run a PoD server and PAConsole couldn't recognize properly whether PoD runs or not.
+   - LSF plug-in:
+      * use LSF's queue information to limit the maximum number of workers in GUI.
+
+## v2.0.7 (2009-04-30)
+- project has been renamed to "PROOF on Demand" (PoD).
+- PAConsole now supports job manager plug-ins. Currently gLite and LSF plug-ins are officially supported.
+- supporting LSF plug-in an workers on LSF.
+- dynamic ports configuration is now sopported on PoD workers and server. PoD chooses ports for XRD, XPROOF and PROOFAgent on the fly during the start of the server of workers.
+- cosmetic changes.
+- using GAW v.3.2.0, PROOFAgent 1.0.5 and PAConsole 1.0.6 (see apps' ReleaseNotes files for more details).
+
+## v2.0.6 (2008-09-02)
+- this version is based on ROOT 5.18 (see: workers are dropped if use ROOT 5.20 or ROOT 5.21.02 - [Trac Ticket #72] )
+- implemented a part of [Trac Ticket #53].
+  Since r1963 there is a possibility to use xrootd pools on WNs.
+  When users can't use external xrootd clusters or any other data source,
+  they may want to use local WNs as pools. In this case gLitePROOF makes UI
+  as a redirector and all connected workers as servers. And one can use xrdcp
+  to distribute data files on the cluster. Example:
+     xrdcp dstarmb0.root root://depc218.gsi.de:20094//tmp/
+  Where depc218.gsi.de - is a gLitePROOF UI and 20094 is a port for xrootd (1094 - is a default one).
+  In the current implementation there is only one major restriction, that a port,
+  which the user has assigned for xrootd should be opened on WNs.
+  In the next version of PROOFAgent there will a proxy provided,
+  so that this restriction will be voided.
+- documentation has been updated.
+- minor bugs have been fixed.
+- Added an ability to download a PROOF log files from worker nodes. [Trac Ticket #77]
+- using GAW v.3.2.0.1974, PROOFAgent v. 1.0.5.1977 and PAConsole 1.0.5 (see apps' ReleaseNotes files for more details).
+
+## v2.0.5 (2008-06-13)
+- gLitePROOF.sh - a grid job script, its error and signal handling has been improved [Trac Ticket #52].
+- added the latest PAConsole.
+- documentation has been updated.
+- using GAW v.3.1.0.1880, PROOFAgent v. 1.0.4.1883 and PAConsole 1.0.4 (see apps' ReleaseNotes files for more details).
+

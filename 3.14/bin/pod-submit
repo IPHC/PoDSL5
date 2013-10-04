@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+#/************************************************************************/
+#/**
+# * @file pod-submit
+# * @brief a script, which can be used to manually submit PoD jobs using a defined RMS
+# * @author Anar Manafov A.Manafov@gsi.de
+# *//*
+#
+#        created by:        Anar Manafov
+#                           2010-01-28
+#
+#        Copyright (c) 2010-2012 GSI, Scientific Computing division. All rights reserved.
+#*************************************************************************/
+#
+# PoD environment variables used by the script:
+#    POD_RMS_DEFAULT_QUEUE   : the name of the RMS queue,
+#                              which PoD should use if the -q parameter is not provided.
+# 
+#
+# PoD environment variables exported to the workers:
+#    POD_SRV_WORKDIR       : PoD server's working directory
+#    POD_UI_LOG_LOCATION   : log dir on the PoD UI
+#    POD_UI_LOCATION       : $POD_LOCATION of the PoD UI
+#
+PLUG_DIR="$POD_LOCATION/plugins/cli"
+#=============================================================================
+# ***** USAGE *****
+#=============================================================================
+usage() {
+    cat <<EOF
+PoD command line utility, which can be used to manually submit PoD jobs using a supported RMS.
+   Copyright (C) 2010-2012 GSI, Scientific Computing division. All rights reserved..
+
+Usage: $(basename $0) [OPTION]
+     -l          Show all available RMS plug-ins.
+     -r rms      Name of the resource management system (supported: $(list_plugins)).
+     -q name     Submit the jobs to specified queue.
+     -n X        Desired number or PROOF workers.
+     -h          Show summary of options.
+
+Report bugs to http://pod.gsi.de
+EOF
+}
+#=============================================================================
+# ***** List all plug-ins  *****
+#=============================================================================
+list_plugins()
+{
+   local PLUGS=($(ls -1 $PLUG_DIR/pod-*-submit))
+   local out=""
+   for i in ${PLUGS[@]}
+   do
+     if [ -n "$out" ]; then
+        out="$out, "
+     fi
+      
+     out="$out$(echo $(basename $i) | awk -F- '{ print $2}')"
+   done
+   echo $out
+}
+#=============================================================================
+# ***** MAIN  *****
+#=============================================================================
+RMS=""
+
+if [ -n "$POD_RMS_DEFAULT_QUEUE" ]; then
+   QUEUE="$POD_RMS_DEFAULT_QUEUE"
+else
+   QUEUE=""
+fi
+
+NUM_WRK=10
+while getopts "hlq:n:r:" opt; do
+   case $opt in
+      l)
+       list_plugins
+       exit 0
+       ;;
+      q)
+       QUEUE="$OPTARG"
+       ;;
+      n)
+       NUM_WRK=$OPTARG
+       ;;
+      r) 
+       RMS=$OPTARG
+       ;;
+      h) 
+       usage
+       exit 0
+       ;;
+     \?)
+       echo "Invalid option: -$OPTARG" >&2
+       exit 1
+       ;;
+   esac
+done
+
+# translate to lowcase
+RMS=$(tr "[:upper:]" "[:lower:]" <<< "$RMS")
+
+#  plugins/pod-RMS-submit
+PLUG_CMD="$PLUG_DIR/pod-$RMS-submit"
+if [ ! -s $PLUG_CMD ]; then
+   echo "Error: can't find \"$RMS\" plug-in."
+   echo "The following is the list of available plug-ins: $(list_plugins)"
+   exit 1
+fi
+
+# call the selected plug-in
+eval LOG_DIR=$(pod-user-defaults --key server.logfile_dir)
+eval POD_WRK_PKG=$(pod-user-defaults --wrkpkg)
+eval POD_WRK_SCRIPT=$(pod-user-defaults --wrkscript)
+export POD_WRK_PKG
+export POD_WRK_SCRIPT
+export POD_UI_LOG_LOCATION=$LOG_DIR
+export POD_UI_LOCATION=$POD_LOCATION
+
+# repack the worker package
+$POD_LOCATION/bin/pod-prep-worker &>/dev/null
+if (( $? != 0 )); then
+   echo "Error: Can't create PoD worker package."
+   echo "Check errors by executing: pod-prep-worker"
+fi
+# execute the selected plug-in
+if [ -n "$QUEUE" ]; then
+   QUEUE="-q $QUEUE"
+fi   
+$PLUG_CMD $QUEUE -n $NUM_WRK
+
