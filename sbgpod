@@ -3,7 +3,7 @@
 # SBG wrapper for PoD
 
 if [[ ${NTUPLEANA_PATH} == "" ]]; then
-echo "Please source setup.sh first"
+echo "Please do source setup.sh first"
 exit 1
 fi
 
