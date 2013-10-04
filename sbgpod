@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# sbg wrapper for PoD
+# SBG wrapper for PoD
 
 if [[ ${NTUPLEANA_PATH} == "" ]]; then
 echo "Please source setup.sh first"
