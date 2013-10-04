@@ -1,0 +1,14 @@
+  Executable    = "PoDWorker.sh";
+  StdOutput     = "PoDJob_glite.out";
+  StdError      = "PoDJob_glite.err";
+  ParameterStep=1;
+  JobType = "parametric";
+  RetryCount = 0;
+  ParameterStart = 0;
+  ShallowRetryCount = 0;
+ OutputSandbox = { "PoDJob_glite.out","PoDJob_glite.err","xpd.log","pod-agent.client.log" };
+ # OutputSandbox = { "PoDJob_glite.out","PoDJob_glite.err","xpd.log","pod-agent.client.log","proof_log.tgz" };
+ # Requirements = other.GlueCEStateStatus == "Production"; 
+ # VirtualOrganisation = "dech"; 
+ # Rank = 0; 
+

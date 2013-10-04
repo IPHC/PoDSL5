@@ -261,24 +261,17 @@ get_default_ROOT()
       esac   
    fi
 
-#   local set_my_rootsys=$($user_defaults -c $POD_CFG --key worker.set_my_rootsys)
-#   if (( $set_my_rootsys == 0 )); then
-#      logMsg "User requested to use a PoD default ROOT version. Downloading..."
-#      wget --no-verbose --tries=2 $BIN_REPO$ROOT_ARC || clean_up 1
-#      tar -xzf $ROOT_ARC || clean_up 1
-#
-#      echo "SET ROOT"
-#      export ROOTSYS="/opt/exp_soft/cms/slc5_amd64_gcc462/lcg/root/5.32.00-cms21"
-#   else
-#      eval ROOTSYS_FROM_CFG=$($user_defaults -c $POD_CFG --key worker.my_rootsys)
-#      export ROOTSYS=$ROOTSYS_FROM_CFG
-#   fi
+   local set_my_rootsys=$($user_defaults -c $POD_CFG --key worker.set_my_rootsys)
+   if (( $set_my_rootsys == 0 )); then
+      logMsg "User requested to use a PoD default ROOT version. Downloading..."
+      wget --no-verbose --tries=2 $BIN_REPO$ROOT_ARC || clean_up 1
+      tar -xzf $ROOT_ARC || clean_up 1
 
-   # CMS environment and ROOT setup at SBG
-   source /grid_mnt/opt__exp_soft/cms/cmsset_default.sh
-   export ROOTSYS="/opt/exp_soft/cms/slc5_amd64_gcc462/lcg/root/5.32.00-cms21"
-   echo "ROOT 5.32.00-cms21 has been set up"
-   # SBG
+      export ROOTSYS="$WD/root"
+   else
+      eval ROOTSYS_FROM_CFG=$($user_defaults -c $POD_CFG --key worker.my_rootsys)
+      export ROOTSYS=$ROOTSYS_FROM_CFG
+   fi
 
    if [ -z $ROOTSYS ]; then
       logMsg "Warning: ROOTSYS is not defined."
@@ -287,17 +280,8 @@ get_default_ROOT()
    fi
    
    export PATH=$ROOTSYS/bin:$PATH
-   
-   source $ROOTSYS/bin/thisroot.sh
 
-   # need to add some librairies
-export LD_LIBRARY_PATH=/opt/exp_soft/cms/slc5_amd64_gcc462/external/llvm/3.2/lib:\
-/opt/exp_soft/cms/slc5_amd64_gcc462/external/gcc/4.6.2/lib64:\
-/opt/exp_soft/cms/globus/lib:\
-/opt/exp_soft/cms/slc5_amd64_gcc462/cms/cmssw/CMSSW_5_3_11/lib/slc5_amd64_gcc462:\
-/opt/exp_soft/cms/slc5_amd64_gcc462/cms/cmssw/CMSSW_5_3_11/external/slc5_amd64_gcc462/lib:\
-$LD_LIBRARY_PATH
-   # SBG
+   source $ROOTSYS/bin/thisroot.sh
 
    # check binary
    xproofd -h #> /dev/null 2>&1

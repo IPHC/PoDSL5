@@ -276,8 +276,8 @@ get_default_ROOT()
 
    # CMS environment and ROOT setup at SBG
    source /grid_mnt/opt__exp_soft/cms/cmsset_default.sh
-   export ROOTSYS="/opt/exp_soft/cms/slc5_amd64_gcc462/lcg/root/5.32.00-cms21"
-   echo "ROOT 5.32.00-cms21 has been set up"
+   export ROOTSYS="/opt/exp_soft/cms/slc5_amd64_gcc462/lcg/root/SBGROOTVERSION"
+   echo "ROOT SBGROOTVERSION has been set up"
    # SBG
 
    if [ -z $ROOTSYS ]; then
